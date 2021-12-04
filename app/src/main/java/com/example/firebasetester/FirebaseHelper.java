@@ -3,14 +3,18 @@ package com.example.firebasetester;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -184,7 +188,7 @@ public class FirebaseHelper {
     public static Map<String, Object> memHelper;
     public static Map<String, Object> getMembers(String event){
         DatabaseReference ev = mCondition.child(event);
-        ev.addValueEventListener(new ValueEventListener() {
+        ev.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Map<String,Object> event1 = (Map<String, Object>) snapshot.getValue();
@@ -198,10 +202,17 @@ public class FirebaseHelper {
         });
         return memHelper;
     }
-    private String[] allEvents(){
+    public static ArrayList<String> eventNames;
+    public static ArrayList<String> allEvents(){
+        mCondition.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
 
-        String[] str = new String[1];
-        return str;
+            }
+        });
+
+
+        return eventNames;
     }
 
 

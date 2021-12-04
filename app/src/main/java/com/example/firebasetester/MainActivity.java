@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -17,10 +18,11 @@ public class MainActivity extends AppCompatActivity {
         //FirebaseHelper.removeMember("Hot Dog Eating Contest", "Hitch Moneymaker");
         //String org = FirebaseHelper.getOrg("Hot Dog Eating Contest");
         //String loc = FirebaseHelper.getLocation("Hot Dog Eating Contest");
-        String date = FirebaseHelper.getDate("Nates elbow stretching class");
+        //String date = FirebaseHelper.getDate("Nates elbow stretching class");
         //Map<String, Object> mem = FirebaseHelper.getMembers("Hot Dog Eating Contest");
         //Log.e("org", org);
-        Log.e("date", date.toString());
+        ArrayList<String> events = FirebaseHelper.allEvents();
+        Log.e("event1",events.get(0));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
