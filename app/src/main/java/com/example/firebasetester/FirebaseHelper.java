@@ -1,5 +1,6 @@
 package com.example.firebasetester;
 
+import android.renderscript.Sampler;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -30,6 +31,7 @@ public class FirebaseHelper {
         public String location;
         public String date;
         public String org;
+        public String desc;
         
         public Map<String, User> members;
         public Event(){
@@ -37,12 +39,14 @@ public class FirebaseHelper {
             this.location = null;
             this.org = null;
             this.members = null;
+            this.desc = null;
         }
-        public Event(String location, String date, String org, Map<String, User> members){
+        public Event(String location, String date, String org, Map<String, User> members, String desc){
             this.date = date;
             this.location = location;
             this.org = org;
             this.members = members;
+            this.desc = desc;
         }
 
 
@@ -64,11 +68,11 @@ public class FirebaseHelper {
 
     }
 
-    public static void newEvent(String name, String Location, String Date, String Org){
+    public static void newEvent(String name, String Location, String Date, String Org, String desc){
         Map<String, User> members = new HashMap<>();
         members.put(Org, new User("Organizer"));
         Map<String, Object> event = new HashMap<>();
-        event.put(name, new Event(Location, Date, Org, members));
+        event.put(name, new Event(Location, Date, Org, members, desc));
         mCondition.updateChildren(event);
     }
     public static void pastEvent(String event){
@@ -82,8 +86,9 @@ public class FirebaseHelper {
                 String date = event1.get("date").toString();
                 Map<String,User> members = (Map<String, User>) event1.get("members");
                 String org = event1.get("org").toString();
+                String desc = event1.get("description").toString();
                 Map<String, Object> nEvent = new HashMap<>();
-                nEvent.put(event, new Event(location, date, org, members));
+                nEvent.put(event, new Event(location, date, org, members, desc));
                 past.updateChildren(nEvent);
             }
             @Override
@@ -113,6 +118,7 @@ public class FirebaseHelper {
     public static String locHelper;
     public static String dateHelper;
     public static String orgHelper;
+    public static String descHelper;
     public static ValueEventListener locListener;
     public static ValueEventListener dateListener;
     public static ValueEventListener allEventsListener;
@@ -120,7 +126,31 @@ public class FirebaseHelper {
 
 
 
+    public static String getDescription(String event, MainActivity m){
+        DatabaseReference ev = mCondition.child(event);
+        DatabaseReference members = ev.child("description");
+        if(descHelper == null){
+            ValueEventListener descPostListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    descHelper = snapshot.getValue().toString();
+                    MainActivity.update_description(descHelper, m);
+                    return;
+                }
 
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("Failure", "The read failed: " + error.getCode());
+                }
+            };
+            members.addValueEventListener(descPostListener);
+        }
+        if (descHelper == null){
+            return "None";
+        } else{
+            return descHelper;
+        }
+    }
 
     public static String getLocation(String event, TextView tv, MainActivity m){
         DatabaseReference ev = mCondition.child(event);

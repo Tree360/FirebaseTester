@@ -23,11 +23,16 @@ public class MainActivity extends AppCompatActivity {
     static boolean location_updated = true;
     static String location = "None";
     static ArrayList<HashMap> events;
+    static String description = "Gumbo Jones";
 
 
     public static void update_location(String loc, MainActivity c){  // Fragment f
         location = loc;
         c.setText("loc", loc);
+    }
+    public static void update_description(String desc, MainActivity m){
+        description = desc;
+
     }
 
     public static void update_date(String date, MainActivity c){  // Fragment f
@@ -66,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        FirebaseHelper.newEvent("Nates elbow stretching class4", "The hospital", "12-12-23", "Nate Hepp");
+        FirebaseHelper.newEvent("Nates elbow stretching class4", "The hospital", "12-12-23", "Nate Hepp", "Big boys eating big hogs");
         FirebaseHelper.pastEvent("Nates elbow stretching class3");
         //FirebaseHelper.addMember("Nates elbow stretching class", "Bungaloooo Jones");
         //FirebaseHelper.removeMember("Hot Dog Eating Contest", "Hitch Moneymaker");
