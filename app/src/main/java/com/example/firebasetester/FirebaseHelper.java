@@ -1,24 +1,25 @@
 package com.example.firebasetester;
 
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.security.auth.login.LoginException;
 
 public class FirebaseHelper {
     static FirebaseDatabase events = FirebaseDatabase.getInstance("https://fir-tester-11754-default-rtdb.firebaseio.com/");
@@ -29,6 +30,7 @@ public class FirebaseHelper {
         public String location;
         public String date;
         public String org;
+        
         public Map<String, User> members;
         public Event(){
             this.date = null;
@@ -61,6 +63,7 @@ public class FirebaseHelper {
         }
 
     }
+
     public static void newEvent(String name, String Location, String Date, String Org){
         Map<String, User> members = new HashMap<>();
         members.put(Org, new User("Organizer"));
@@ -89,132 +92,166 @@ public class FirebaseHelper {
             }
         });
     }
+
     public static void addMember(String event, String member){
         DatabaseReference ev = mCondition.child(event);
         DatabaseReference members = ev.child("members");
-        members.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Map<String, Object> mem = (Map<String,Object>) snapshot.getValue();
-                mem.put(member, new User("Member"));
-                members.updateChildren(mem);
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("Failure", "The read failed: " + error.getCode());
-            }
-        });
-
+        Map<String, Object> mem = new HashMap<>();
+        mem.put(member, new User("Member"));
+        members.updateChildren(mem);
     }
+
     public static void removeMember(String event, String member){
         DatabaseReference ev = mCondition.child(event);
-        DatabaseReference members = ev.child("members").child(member);
-        members.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                snapshot.getRef().setValue(null);
-            }
+        DatabaseReference members = ev.child("members"); // .child(member);
+        members.child(member).setValue(null);
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("Failure", "The read failed: " + error.getCode());
-            }
-        });
-
+        return;
     }
+
     public static String locHelper;
     public static String dateHelper;
     public static String orgHelper;
-    public static String getLocation(String event){
+    public static ValueEventListener locListener;
+    public static ValueEventListener dateListener;
+    public static ValueEventListener allEventsListener;
+    public static ValueEventListener membersListener;
+
+
+
+
+
+    public static String getLocation(String event, TextView tv, MainActivity m){
         DatabaseReference ev = mCondition.child(event);
         DatabaseReference members = ev.child("location");
-        members.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                locHelper = snapshot.getValue().toString();
-                Log.e("location", locHelper);
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("Failure", "The read failed: " + error.getCode());
-            }
-        });
-        return locHelper;
+        if (locListener == null) {
+            ValueEventListener locationPostListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snap) {
+                    locHelper = snap.getValue().toString();
+                    // tv.setText(locHelper);
+                    MainActivity.update_location(locHelper, m);
+                    return;
+                }
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Log.e("Failure", "The read failed: " + error.getCode());
+                }
+            };
+            members.addValueEventListener(locationPostListener);
+        }
+        if (locHelper == null){
+            return "None";
+        } else{
+            return locHelper;
+        }
     }
 
-
-    public static String getDate(String event){
+    public static String getDate(String event, MainActivity m){
         DatabaseReference ev = mCondition.child(event);
         DatabaseReference members = ev.child("date");
-        members.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                dateHelper = snapshot.getValue().toString();
-                Log.e("date", dateHelper);
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("Failure", "The read failed: " + error.getCode());
-            }
-        });
-        return dateHelper;
+        if (locListener == null) {
+            ValueEventListener datePostListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snap) {
+                    dateHelper = snap.getValue().toString();
+                    // tv.setText(locHelper);
+                    MainActivity.update_date(dateHelper, m);
+                    return;
+                }
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Log.e("Failure", "The read failed: " + error.getCode());
+                }
+            };
+            members.addValueEventListener(datePostListener);
+        }
+        return "None";
     }
 
+    public static ValueEventListener orgListener;
 
-    public static String getOrg(String event){
+    public static String getOrg(String event, MainActivity m){
         DatabaseReference ev = mCondition.child(event);
-
-        ev.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Map<String,Object> event1 = (Map<String, Object>) snapshot.getValue();
-                String org = event1.get("org").toString();
-                orgHelper = org;
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("Failure", "The read failed: " + error.getCode());
-            }
-        });
-        return orgHelper;
+        DatabaseReference members = ev.child("org");
+        if (orgListener == null) {
+            ValueEventListener orgPostListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snap) {
+                    orgHelper = snap.getValue().toString();
+                    // tv.setText(locHelper);
+                    MainActivity.update_org(orgHelper, m);
+                    return;
+                }
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Log.e("Failure", "The read failed: " + error.getCode());
+                }
+            };
+            members.addValueEventListener(orgPostListener);
+        }
+        return "";
     }
-
 
     public static Map<String, Object> memHelper;
-    public static Map<String, Object> getMembers(String event){
+
+    // Map<String, Object>
+    public static String getMembers(String event, MainActivity m){
         DatabaseReference ev = mCondition.child(event);
-        ev.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Map<String,Object> event1 = (Map<String, Object>) snapshot.getValue();
-                memHelper = (Map<String, Object>) event1.get("members");
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("Failure", "The read failed: " + error.getCode());
-            }
-        });
-        return memHelper;
+        DatabaseReference members = ev.child("members");
+        if (membersListener == null) {
+            ValueEventListener membersPostListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snap) {
+                    //dateHelper = snap.getValue().toString();
+                    // tv.setText(locHelper);
+                    Log.i("Nate", "In Data Change Members");
+                    HashMap mems = (HashMap) snap.getValue();
+                    MainActivity.update_members(mems, m);
+                }
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Log.e("Failure", "The read failed: " + error.getCode());
+                }
+            };
+            members.addValueEventListener(membersPostListener);
+        }
+        return "None";
     }
+
+
     public static ArrayList<String> eventNames;
-    public static ArrayList<String> allEvents(){
-        mCondition.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DataSnapshot> task) {
 
-            }
-        });
-
-
-        return eventNames;
+    // Map<String, Object>
+    public static String getAllEvents(MainActivity m) {
+        DatabaseReference ev = mCondition;
+        if (allEventsListener == null) {
+            ValueEventListener eventsPostListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snap) {
+                    //dateHelper = snap.getValue().toString();
+                    // tv.setText(locHelper);
+                    ArrayList<HashMap> events
+                            = new ArrayList<HashMap>();
+                    HashMap<String,Object> event;
+                    for (DataSnapshot o: snap.getChildren()){
+                        event = new HashMap<>();
+                        event.put("name", o.getKey().toString());
+                        event.put("info", o.getValue());
+                        events.add(event);
+                    }
+                    //HashMap mems = (HashMap) snap.getValue();
+                    MainActivity.update_events(events, m);
+                }
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Log.e("Failure", "The read failed: " + error.getCode());
+                }
+            };
+            ev.addValueEventListener(eventsPostListener);
+        }
+        return "None";
     }
-
-
-
 }
